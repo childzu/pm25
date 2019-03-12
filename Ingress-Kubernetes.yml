@@ -1,0 +1,10 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: pm25-spring-boot-ingress
+  annotations:
+    kubernetes.io/ingress.allow-http: "true"
+spec:
+  backend:
+    serviceName: pm25-spring-boot-service
+    servicePort: 8080
