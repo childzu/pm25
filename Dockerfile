@@ -1,5 +1,13 @@
-FROM java:8
+FROM openjdk:8-jdk-alpine
+
+LABEL maintainer="childzu@gmail.com"
+
 VOLUME /tmp
-ADD pm25-0.1.0.jar app.jar
-RUN bash -c 'touch /app.jar'
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+
+EXPOSE 8080
+
+ARG JAR_FILE=target/pm25-0.0.1-SNAPSHOT.jar
+
+ADD ${JAR_FILE} pm25.jar
+
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/pm25.jar"]
