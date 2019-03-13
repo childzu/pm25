@@ -8,6 +8,71 @@ sudo apt update
 sudo apt install maven
 ############ Building Docker #####################
 mvn clean package
-docker build -t <pm35> .
+docker build -t <pm25-spring-boot-app> .
 docker images
-docker run -p 8080:8080 pm25
+docker run -p 8080:8080 pm25-spring-boot-app
+############ Create Kubernetes Deployment ie. deployment.yaml ########
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pm25-spring-boot-app
+spec:
+  selector:
+    app: pm25-spring-boot-app
+
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: NodePort
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata: {name: pm25-spring-boot-app}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pm25-spring-boot-app
+      track: stable
+  strategy:
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+    type: RollingUpdate
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: pm25-spring-boot-app
+        track: stable
+      name: pm25-spring-boot-app
+    spec:
+      containers:
+      - image: IMAGE_URL
+        imagePullPolicy: IfNotPresent
+        name: pm25-spring-boot-app
+        resources:
+          limits:
+            memory: 0.25G
+            cpu: 0.25
+        terminationMessagePath: /dev/termination-log
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+############ Register docker to registry ##########
+export REGISTRY=2886795353-5000-ollie02.environments.katacoda.com
+docker tag pm25-spring-boot-app:<version> $REGISTRY/pm25-spring-boot-app:<version>
+docker push $REGISTRY/pm25-spring-boot-app:<version>
+sed -i -e 's@IMAGE_URL@'"$REGISTRY/pm25-spring-boot-app:<version>"'@' deployment.yaml
+scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@host01:/root/.kube/config ~/.kube/
+############ Run Kubernetes #######################
+kubectl apply -f deployment.yaml
+kubectl get services
+kubectl get pods
+kubectl get svc
+kubectl get deployments
+export PORT=$(kubectl get svc pm25-spring-boot-app -o go-template='{{range.spec.ports}}{{if .nodePort}}{{.nodePort}}{{"\n"}}{{end}}{{end}}')
+curl host01:$PORT 
+

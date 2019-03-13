@@ -1,0 +1,49 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pm25-spring-boot-app
+spec:
+  selector:
+    app: pm25-spring-boot-app
+
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: NodePort
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata: {name: pm25-spring-boot-app}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pm25-spring-boot-app
+      track: stable
+  strategy:
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+    type: RollingUpdate
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: pm25-spring-boot-app
+        track: stable
+      name: pm25-spring-boot-app
+    spec:
+      containers:
+      - image: IMAGE_URL
+        imagePullPolicy: IfNotPresent
+        name: pm25-spring-boot-app
+        resources:
+          limits:
+            memory: 0.25G
+            cpu: 0.25
+        terminationMessagePath: /dev/termination-log
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
