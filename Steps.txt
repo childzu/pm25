@@ -1,0 +1,13 @@
+############ Install JDK8 ########################
+sudo apt update
+sudo apt install openjdk-8-jdk
+sudo update-alternatives --config java
+export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/"
+############ Install Maven #######################
+sudo apt update
+sudo apt install maven
+############ Building Docker #####################
+mvn clean package
+docker build -t <pm35> .
+docker images
+docker run -p 8080:8080 pm25
