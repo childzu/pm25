@@ -8,7 +8,7 @@ sudo apt update
 sudo apt install maven
 ############ Building Docker #####################
 mvn clean package
-docker build -t <pm25-spring-boot-app> .
+docker build -t pm25-spring-boot-app .
 docker images
 docker run -p 8080:8080 pm25-spring-boot-app
 ############ Create Kubernetes Deployment ie. deployment.yaml ########
@@ -66,7 +66,9 @@ spec:
 ############ Register docker to registry ##########
 export REGISTRY=2886795353-5000-ollie02.environments.katacoda.com
 docker tag pm25-spring-boot-app:<version> $REGISTRY/pm25-spring-boot-app:<version>
+docker tag pm25-spring-boot-app pm25-spring-boot-app
 docker push $REGISTRY/pm25-spring-boot-app:<version>
+docker push pm25-spring-boot-app
 sed -i -e 's@IMAGE_URL@'"$REGISTRY/pm25-spring-boot-app:<version>"'@' deployment.yaml
 scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@host01:/root/.kube/config ~/.kube/
 ############ Run Kubernetes #######################
