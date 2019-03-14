@@ -49,9 +49,11 @@ spec:
       name: pm25-spring-boot-app
     spec:
       containers:
-      - image: IMAGE_URL
+      imagePullSecrets:
+      - name: regcred
+      - image: pm25-spring-boot-app
         imagePullPolicy: IfNotPresent
-        name: pm25-spring-boot-app
+        name: private-reg-container-name
         resources:
           limits:
             memory: 0.25G
