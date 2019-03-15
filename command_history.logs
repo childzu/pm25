@@ -1,0 +1,30 @@
+$ cat command_history.txt
+    1  minikube start
+    2  kubectl get nodes
+    9  kubectl run pm25 --image=childzu/myrepo:pm25 --replicas=1
+   10  kubectl get all -o wide
+		NAME                        READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+		pod/pm25-75c74944c9-s6jds   1/1     Running   0          16m   172.18.0.4   minikube   <none>           <none>
+		
+		NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+		service/kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP    19m   <none>
+		service/pm25         ClusterIP   10.106.128.153   172.17.0.81   8080/TCP   15m   run=pm25
+		
+		NAME                   READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                SELECTOR
+		deployment.apps/pm25   1/1     1            1           16m   pm25         childzu/myrepo:pm25   run=pm25
+		
+		NAME                              DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES                SELECTOR
+		replicaset.apps/pm25-75c74944c9   1         1         1       16m   pm25         childzu/myrepo:pm25   pod-template-hash=75c74944c9,run=pm25
+ 
+   11  kubectl expose deployment pm25 --external-ip="172.17.0.81" --port=8080 --target-port=8080
+
+   13  curl http://172.17.0.81:8080
+
+   19  kubectl describe deployment pm25
+   20  kubectl get svc
+   22  docker ps | grep pm25
+   26  kubectl scale --replicas=3 deployments pm25
+   27  kubectl get all
+   28  kubectl get pods
+   35  kubectl scale --replicas=1 deployment pm25
+   36  kubectl describe svc pm25

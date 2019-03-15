@@ -1,50 +1,32 @@
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: pm25
-spec:
-  selector:
-    app: pm25
-
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
-  type: NodePort
-
----
 apiVersion: extensions/v1beta1
 kind: Deployment
-metadata: {name: pm25}
+metadata:
+  name: pm25-dep
 spec:
   replicas: 1
-  selector:
-    matchLabels:
-      app: pm25
-      track: stable
-  strategy:
-    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
-    type: RollingUpdate
-  revisionHistoryLimit: 1
   template:
     metadata:
       labels:
         app: pm25
-        track: stable
-      name: pm25
     spec:
       containers:
       - name: pm25
         image: childzu/myrepo:pm25
-        imagePullSecrets:
-          - name: regcred
-      resources:
-        limits:
-          memory: 0.25G
-          cpu: 0.25
-        terminationMessagePath: /dev/termination-log
-      dnsPolicy: ClusterFirst
-      restartPolicy: Always
-      securityContext: {}
-      terminationGracePeriodSeconds: 30
+        ports:
+        - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pm25-svc
+  labels:
+    app: pm25
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    nodePort: 30080
+  selector:
+    app: pm25
