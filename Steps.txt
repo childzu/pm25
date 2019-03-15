@@ -16,7 +16,7 @@ docker run -p 8080:8080 pm25-spring-boot-app
 apiVersion: v1
 kind: Service
 metadata:
-  name: pm25-spring-boot-app
+  name: pm25-svc
 spec:
   selector:
     app: pm25-spring-boot-app
@@ -49,11 +49,12 @@ spec:
       name: pm25-spring-boot-app
     spec:
       containers:
+      - name: pm26
+        image: childzu/myrepo:pm25
+        ports:
+        - containerPort: 8080
       imagePullSecrets:
-      - name: regcred
-      - image: pm25-spring-boot-app
-        imagePullPolicy: IfNotPresent
-        name: private-reg-container-name
+        - name: pm26registrykey
         resources:
           limits:
             memory: 0.25G
@@ -79,4 +80,201 @@ kubectl get svc
 kubectl get deployments
 export PORT=$(kubectl get svc pm25-spring-boot-app -o go-template='{{range.spec.ports}}{{if .nodePort}}{{.nodePort}}{{"\n"}}{{end}}{{end}}')
 curl host01:$PORT 
+########### Create Registry Key ###################
+kubectl create secret docker-registry pm26registrykey --docker-server=https://index.docker.io/v1/ --docker-username=childzu --docker-password=<password> --docker-email=childzu@gmail.com
+kubectl get secret pm26registrykey --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode
 
+########### Networking ############################
+#1. Cluster TP 
+It can be done by set replicas > 1 in deployments file.
+Example
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp1-clusterip-svc
+  labels:
+    app: webapp1-clusterip
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: webapp1-clusterip
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: webapp1-clusterip-deployment
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: webapp1-clusterip
+    spec:
+      containers:
+      - name: webapp1-clusterip-pod
+        image: katacoda/docker-http-server:latest
+        ports:
+        - containerPort: 80
+---
+export CLUSTER_IP=$(kubectl get services/<service-name> -o go-template='{{(index .spec.clusterIP)}}')
+curl $CLUSTER_IP:80
+#2. Target Port
+It can be done by set Target Port on service deploment file
+Example 
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp1-clusterip-targetport-svc
+  labels:
+    app: webapp1-clusterip-targetport
+spec:
+  ports:
+  - port: 8080
+    targetPort: 80
+  selector:
+    app: webapp1-clusterip-targetport
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: webapp1-clusterip-targetport-deployment
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: webapp1-clusterip-targetport
+    spec:
+      containers:
+      - name: webapp1-clusterip-targetport-pod
+        image: katacoda/docker-http-server:latest
+        ports:
+        - containerPort: 80
+---
+export CLUSTER_IP=$(kubectl get services/webapp1-clusterip-targetport-svc -o go-template='{{(index .spec.clusterIP)}}')
+curl $CLUSTER_IP:8080
+#3. NodePort
+NodePort exposes the service on each Node’s IP via the defined static port
+We can access service on Node's IP address
+It can be done by setting NodePort in service deployment file
+Example
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp1-nodeport-svc
+  labels:
+    app: webapp1-nodeport
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30080
+  selector:
+    app: webapp1-nodeport
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: webapp1-nodeport-deployment
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: webapp1-nodeport
+    spec:
+      containers:
+      - name: webapp1-nodeport-pod
+        image: katacoda/docker-http-server:latest
+        ports:
+        - containerPort: 80
+---
+Check node's IP is below
+kubectl get nodes -o wide
+NAME      STATUS    ROLES     AGE       VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+master    Ready     master    35m       v1.11.3   172.17.0.7    <none>        Ubuntu 16.04.2 LTS   4.4.0-62-generic   docker://1.13.1
+curl 172.17.0.7:30080
+
+#4. External IPs
+We can access service of pod by making a service available outside of the cluster is via External IP addresses.
+It can be done by setting externalIPs: in the service deployment file.
+Example
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp1-externalip-svc
+  labels:
+    app: webapp1-externalip
+spec:
+  ports:
+  - port: 80
+  externalIPs:
+  - 172.17.0.7
+  selector:
+    app: webapp1-externalip
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: webapp1-externalip-deployment
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: webapp1-externalip
+    spec:
+      containers:
+      - name: webapp1-externalip-pod
+        image: katacoda/docker-http-server:latest
+        ports:
+        - containerPort: 80
+---
+In the above service config external IPs with 172.17.0.7 and Port is 80 then
+we can access the service like below
+curl 172.17.0.7
+
+#5. Load Balancer
+We can define our service to load balance by using capability of Cloud Provider Load Balancer
+It can be done by setting type: LoadBalancer in service deployment file
+Example
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp1-loadbalancer-svc
+  labels:
+    app: webapp1-loadbalancer
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+  selector:
+    app: webapp1-loadbalancer
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: webapp1-loadbalancer-deployment
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: webapp1-loadbalancer
+    spec:
+      containers:
+      - name: webapp1-loadbalancer-pod
+        image: katacoda/docker-http-server:latest
+        ports:
+        - containerPort: 80
+---
+Get LoadBalancerIP like below
+export LoadBalancerIP=$(kubectl get services/webapp1-loadbalancer-svc -o go-template='{{(index .status.loadBalancer.ingress 0).ip}}')
+echo LoadBalancerIP=$LoadBalancerIP
+LoadBalancerIP=10.10.0.1
+curl $LoadBalancerIP

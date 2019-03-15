@@ -1,0 +1,34 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: pm26-dep
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pm26
+    spec:
+      containers:
+      - name: pm26
+        image: childzu/hub:pm26
+        ports:
+        - containerPort: 8080
+      imagePullSecrets:
+        - name: pm26registrykey
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pm26-svc
+  labels:
+    app: pm26
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    nodePort: 30080
+  selector:
+    app: pm26
