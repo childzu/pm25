@@ -278,3 +278,55 @@ export LoadBalancerIP=$(kubectl get services/webapp1-loadbalancer-svc -o go-temp
 echo LoadBalancerIP=$LoadBalancerIP
 LoadBalancerIP=10.10.0.1
 curl $LoadBalancerIP
+
+################ Ingress ####################
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: pm25-dep
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pm25
+    spec:
+      containers:
+      - name: pm25
+        image: childzu/myrepo:pm25
+        ports:
+        - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pm25-svc
+  labels:
+    app: pm25
+spec:
+  ports:
+  - port: 8080
+  selector:
+    app: pm25
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: pm25-ingress
+spec:
+  rules:
+  - host: pm25.example
+    http:
+      paths:
+      - path: /pm25
+        backend:
+          serviceName: pm25-svc
+          servicePort: 8080
+      - backend:
+          serviceName: pm25-svc
+          servicePort: 8080
+
+curl -H "Host: pm25.example" 10.98.156.128:8080/api/weather/10t
