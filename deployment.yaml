@@ -27,6 +27,6 @@ spec:
   type: NodePort
   ports:
   - port: 8080
-    nodePort: 8080
+    nodePort: 30080
   selector:
     app: pm25
