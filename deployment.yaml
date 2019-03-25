@@ -2,7 +2,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: pm25-dep
+  name: pm25-deployment
 spec:
   replicas: 1
   template:
@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
       - name: pm25
-        image: childzu/myrepo:pm25
+        image: childzu/myrepo:pm25-v2
         ports:
         - containerPort: 8080
 

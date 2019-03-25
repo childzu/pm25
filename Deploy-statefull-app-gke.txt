@@ -1,0 +1,26 @@
+########### Create a cluster #############
+# create the cluster 
+$ gcloud container clusters create [CLUSTER_NAME] 
+# set the default cluster 
+$ gcloud config set container/cluster [CLUSTER_NAME] 
+# pass cluster credentials to kubectl 
+$ gcloud container clusters get-credentials [CLUSTER_NAME]
+$ export PROJECT_ID="$(gcloud config get-value project -q)"
+
+########### Persistent Disks to store our images and themes #############
+# PersistentVolumeClaim.yml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pd-blog-volume-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+########### Create a Second Generation MySQL instance and connect to it #############
+########### A secret to store credentials #############
+########### A deployment #############
+########### A service to expose the application #############
