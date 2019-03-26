@@ -21,6 +21,22 @@ spec:
       storage: 10Gi
   storageClassName: standard
 ########### Create a Second Generation MySQL instance and connect to it #############
+# Get DB tier
+$ gcloud sql tiers list
+# Create instances
+$ gcloud sql instances create [INSTANCE_NAME] --tier=[TIER] --region=[REGION]
+# [INSTANCE_NAME] = this will be the name of the db
+# [TIER] = chosen machine tier from previous list
+# [REGION] = preferably your clusters region (e.g: us-central1)
+# Set username/password
+$ gcloud sql users set-password root % --instance [INSTANCE_NAME] --password [PASSWORD]
+# [ISNTANCE_NAME] = name of your previously created db
+# [PASSWORD] = the password you want for root
+# Enable the Cloud SQL Admin API. You can do it here.
+  https://console.cloud.google.com/flows/enableapi?apiid=sqladmin
+
+
+
 ########### A secret to store credentials #############
 ########### A deployment #############
 ########### A service to expose the application #############

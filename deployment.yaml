@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
       - name: pm25
-        image: childzu/myrepo:pm25-v2
+        image: childzu/myrepo:pm25-v3
         ports:
         - containerPort: 8080
 
