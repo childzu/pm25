@@ -32,7 +32,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(
-                        credentialsId: 'myrepoid',
+                        credentialsId: 'docker-credential',
                         url: 'https://index.docker.io/v1/') {
                         dockerImage.push()
                     }
