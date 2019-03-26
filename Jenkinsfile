@@ -8,6 +8,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+            	sh 'apt-get update && apt install maven'
                 sh 'mvn -B -DskipTests clean package'
             }
         }
