@@ -1,19 +1,19 @@
 pipeline {
     agent any
-    environment {
-        dockerImage = ''
+    tools{
+        maven "mvn"
+        jdk 'jdk8'
     }
-    tools { 
-        maven 'Maven 3.6.0' 
-        jdk 'jdk8' 
+    options {
+        skipStagesAfterUnstable()
     }
     stages {
-    	stage ('Initialize') {
+        stage ('Initialize') {
             steps {
                 sh '''
                     echo "PATH = ${PATH}"
                     echo "M2_HOME = ${M2_HOME}"
-                ''' 
+                '''
             }
         }
         stage('Build') {
@@ -25,28 +25,24 @@ pipeline {
             steps {
                 sh 'mvn test'
             }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
-                }
-            }
         }
         stage('Build image') {
+        	agent{
+        		docker { image 'node:7-alpine' }
+        	}
             steps {
-                script {
-                    dockerImage = docker.build("childzu/myrepo:pm25-v3")
-                }
+                sh 'docker build -t childzu/myrepo:pm25 .'
             }
         }
         stage('Push image') {
+        	agent{
+        		docker { image 'node:7-alpine' }
+        	}
             steps {
-                script {
-                    withDockerRegistry(
-                        credentialsId: 'docker-credential',
-                        url: 'https://index.docker.io/v1/') {
-                        dockerImage.push()
-                    }
-                }
+                sh '''
+                    docker tag childzu/myrepo:pm25 childzu/myrepo:pm25-v3
+                    docker push childzu/myrepo:pm25-v3
+                '''
             }
         }
         stage('Deployment') {
