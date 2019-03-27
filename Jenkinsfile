@@ -27,11 +27,13 @@ pipeline {
             }
         }
         stage('Build image') {
+        	agent { dockerfile true }
             steps {
                 sh 'docker build -t childzu/myrepo:pm25 .'
             }
         }
         stage('Push image') {
+        	agent { dockerfile true }
             steps {
                 sh '''
                     docker tag childzu/myrepo:pm25 childzu/myrepo:pm25-v3
