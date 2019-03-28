@@ -7,7 +7,7 @@ def  dockerhubimage ="childzu/myrepo:${appName}.${env.BRANCH_NAME}.${env.BUILD_N
 pipeline {
     agent {
     kubernetes {
-      label 'sample-app'
+      label 'pm25'
       defaultContainer 'jnlp'
       yaml """
 apiVersion: v1
@@ -55,53 +55,48 @@ spec:
 }
  }
   stages {
-    // stage('Build package') {
-    //   steps {
-    //     container('maven') {
-    //       sh """
-    //       mvn -B -DskipTests clean package
-    //       """
-    //     }
-    //   }
-    // }
-    // stage('Test') {
-    //   steps {
-    //     container('maven') {
-    //       sh """
-    //       mvn test
-    //       """
-    //     }
-    //   }
-    // }
-    stage('Build and push image with Container Builder') {
+    stage('Build package') {
       steps {
-        container('gcloud') {
+        container('maven') {
           sh """
-          echo ${imageTag}
-          sed -i 's#IMAGE_TAG#${imageTag}#' cloudbuild.yaml
-          gcloud builds submit --config cloudbuild.yaml .
+          mvn -B -DskipTests clean package
+          """
+        }
+      }
+    }
+     stage('Test') {
+      steps {
+        container('maven') {
+          sh """
+          mvn test
           """
         }
       }
     }
     // stage('Build and push image with Container Builder') {
     //   steps {
-    //     container('docker') {
-    //       sh"""
-    //       docker build -t ${imageTag} .
-    //       sed -i 's#CONTAINER_IMAGE_TAG#${imageTag}#' deployment.yaml
-    //       docker tag ${imageTag} ${imageTag}
-    //       docker login --username childzu --password poom25240103
-    //       docker push ${imageTag}
-    //       """
+    //     container('gcloud') {
+    //       sh "gcloud builds submit -t ${imageTag} ."
     //     }
     //   }
     // }
+    stage('Build and push image with Container Builder') {
+      steps {
+        container('docker') {
+          sh("docker build -t ${imageTag} .")
+          sh("sed -i 's#CONTAINER_IMAGE_TAG#${dockerhubimage}#' deployment.yaml")
+          sh("docker tag ${imageTag} ${dockerhubimage}")
+          sh("docker login --username childzu --password poom25240103")
+          //sh("gcloud auth configure-docker")
+          sh("docker push ${dockerhubimage}")
+        }
+      }
+    }
     stage('Deploy Canary') {
       when { branch 'canary' }
       steps {
         container('kubectl') {
-          sh("sed -i 's#CONTAINER_IMAGE_TAG#${imageTag}#' deployment.yaml")
+          //sh("sed -i 's#CONTAINER_IMAGE_TAG#${imageTag}#' deployment.yaml")
           sh("kubectl --namespace=default apply -f deployment.yaml")
           sh("echo http://`kubectl --namespace=default get service/${feSvcName} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${feSvcName}")
         } 
@@ -111,7 +106,7 @@ spec:
       when { branch 'master' }
       steps{
         container('kubectl') {
-          sh("sed -i 's#CONTAINER_IMAGE_TAG#${imageTag}#' deployment.yaml")
+          //sh("sed -i 's#CONTAINER_IMAGE_TAG#${imageTag}#' deployment.yaml")
           sh("kubectl --namespace=default apply -f deployment.yaml")
           sh("echo http://`kubectl --namespace=default get service/${feSvcName} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${feSvcName}")
         }
@@ -124,7 +119,7 @@ spec:
       } 
       steps {
         container('kubectl') {
-          sh("sed -i 's#CONTAINER_IMAGE_TAG#${imageTag}#' deployment.yaml")
+          //sh("sed -i 's#CONTAINER_IMAGE_TAG#${imageTag}#' deployment.yaml")
           sh("kubectl --namespace=default apply -f deployment.yaml")
           sh("echo http://`kubectl --namespace=default get service/${feSvcName} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${feSvcName}")
         }

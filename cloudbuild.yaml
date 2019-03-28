@@ -1,0 +1,10 @@
+steps:
+- name: 'gcr.io/cloud-builders/mvn'
+  args: ['clean']
+- name: 'gcr.io/cloud-builders/mvn'
+  args: ['package']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'IMAGE_TAG', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'IMAGE_TAG']
+images: ['IMAGE_TAG']

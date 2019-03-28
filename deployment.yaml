@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: pm25-deployment
 spec:
-  replicas: 1
+  replicas: 4
   template:
     metadata:
       labels:
@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
       - name: pm25
-        image: childzu/myrepo:pm25-v3
+        image: CONTAINER_IMAGE_TAG
         ports:
         - containerPort: 8080
 
