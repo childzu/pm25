@@ -1,8 +1,9 @@
 def project ='parabolic-env-235306'
-def  appName ='pm25'
-def  feSvcName ="${appName}-svc"
-def  imageTag ="gcr.io/${project}/${appName}:${env.BRANCH_NAME}.${env.BUILD_NUMBER}"
-def  dockerhubimage ="childzu/myrepo:${appName}.${env.BRANCH_NAME}.${env.BUILD_NUMBER}"
+def appName ='pm25'
+def feSvcName ="${appName}-svc"
+def repoLocation = "gcr.io"
+def imageTag ="${repoLocation}/${project}/${appName}:${env.BRANCH_NAME}.${env.BUILD_NUMBER}"
+def dockerhubimage ="childzu/myrepo:${appName}.${env.BRANCH_NAME}.${env.BUILD_NUMBER}"
 
 pipeline {
     agent {
@@ -55,31 +56,31 @@ spec:
 }
  }
   stages {
-    // stage('Build package') {
-    //   steps {
-    //     container('maven') {
-    //       sh """
-    //       mvn -B -DskipTests clean package
-    //       """
-    //     }
-    //   }
-    // }
-    // stage('Test') {
-    //   steps {
-    //     container('maven') {
-    //       sh """
-    //       mvn test
-    //       """
-    //     }
-    //   }
-    // }
-    stage('Build and push image with Container Builder') {
+    stage('Build package') {
+      steps {
+        container('maven') {
+          sh """
+            mvn -B -DskipTests clean package
+          """
+        }
+      }
+    }
+    stage('Test package') {
+      steps {
+        container('maven') {
+          sh """
+            mvn test
+          """
+        }
+      }
+    }
+    stage('Build and push image') {
       steps {
         container('gcloud') {
           sh """
-          echo ${imageTag}
-          sed -i 's#IMAGE_TAG#${imageTag}#' cloudbuild.yaml
-          gcloud builds submit --config cloudbuild.yaml .
+            echo ${imageTag}
+            sed -i 's#IMAGE_TAG#${imageTag}#' cloudbuild.yaml
+            gcloud builds submit --config cloudbuild.yaml .
           """
         }
       }
@@ -88,11 +89,11 @@ spec:
     //   steps {
     //     container('docker') {
     //       sh"""
-    //       docker build -t ${imageTag} .
-    //       sed -i 's#CONTAINER_IMAGE_TAG#${imageTag}#' deployment.yaml
-    //       docker tag ${imageTag} ${imageTag}
-    //       docker login --username childzu --password poom25240103
-    //       docker push ${imageTag}
+    //         docker build -t ${imageTag} .
+    //         sed -i 's#CONTAINER_IMAGE_TAG#${imageTag}#' deployment.yaml
+    //         docker tag ${imageTag} ${imageTag}
+    //         docker login --username childzu --password poom25240103
+    //         docker push ${imageTag}
     //       """
     //     }
     //   }
